@@ -14,25 +14,25 @@ HEADERS = {
 
 
 def send_message_btn(phone_number: str):
-    url = f"{ZAPI_BASE_URL}/send-button-list"
+    url = f"{ZAPI_BASE_URL}/send-button-actions"
 
     payload = {
         "phone": phone_number,
-        "message": "Com o Zoom Educa, sua escola ganha uma visão precisa do desempenho dos alunos como se estivessem fazendo o ENEM de verdade!\n📊 Simulação REAL com base nas notas da escola\n🎓 Veja quem passaria no SISU, ProUni ou FIES\n🚀 Descubra os alunos com maior chance de aprovação\n🛠️ Identifique quem precisa de reforço e em que áreas!",
-        "title": "🎯 Você sabia que é possível descobrir agora mesmo quais alunos da sua escola já estariam APROVADOS no ENEM?",
-        "footer": "💡 Transforme suas avaliações em dados estratégicos e impulsione seus resultados!",
+        "message": "🤖 CAPTURA INTELIGENTE com IA\n📲 Basta uma foto da folha de resposta e pronto:\n✔️ Correção automática do gabarito\n✔️ Resultados por aluno, turma e conteúdo\n📊 Análises instantâneas para tomada de decisão\n\n🚀 Transforme a forma como sua escola avalia!\n",
+        "title": "📌 Sua escola ainda corrige provas manualmente? Com o Zoom Educa, você corrige avaliações em segundos, usando apenas o celular!\n",
+        "footer": "🔗 Saiba mais: zoomeduca.com.br/saiba-mais/captura-de-folhas",
         "buttonActions": [
             {
                 "id": "1",
                 "type": "URL",
-                "url": "https://zoomeduca.com.br",
-                "label": "Visite nosso site"
+                "url": "https://api.whatsapp.com/send?phone=5586999812204&text=Olá%2C+gostaria+de+saber+mais+sobre+o+zoom+educa%21",
+                "label": "Tenho interesse 😁"
             },
             {
                 "id": "2",
                 "type": "URL",
-                "url": "https://wa.me/5586999812204",
-                "label": "Fale com um consultor"
+                "url": "https://wa.me/5586999856371",
+                "label": "Não tenho interesse ☹️"
             },
         ]
     }
@@ -45,7 +45,7 @@ def send_image(phone_number: str):
 
     payload = {
         "phone": phone_number,
-        "image": "https://zoomeduca.com.br/what-feedback.jpeg"
+        "image": "https://zoomeduca.com.br/gestor_2705.jpeg"
     }
 
     send_request(url, payload, phone_number)
@@ -58,7 +58,8 @@ def send_request(url: str, payload: dict, phone_number: str):
     print("Status Code:", response.status_code)
 
     try:
-        print("Response JSON:", response.json())
+        # print("Response JSON:", response.json())
+        pass
     except Exception:
         print("Response Text:", response.text)
 
