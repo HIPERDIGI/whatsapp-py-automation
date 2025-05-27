@@ -34,7 +34,7 @@ def authenticate_google():
 
 def get_phone_numbers(sheet_name: str, sheet_page: str):
     client = authenticate_google()
-    sheet = client.open('teste').worksheet('Página1')
+    sheet = client.open('teste').worksheet('Página2')
 
     # Ler o cabeçalho (linha 1 de A até Z)
     header = sheet.range('A1:Z1')

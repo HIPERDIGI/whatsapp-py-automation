@@ -25,13 +25,12 @@ def send_message_btn(phone_number: str):
             {
                 "id": "1",
                 "type": "URL",
-                "url": "https://api.whatsapp.com/send?phone=5586999812204&text=Olá%2C+gostaria+de+saber+mais+sobre+o+zoom+educa%21",
+                "url": "https://api.whatsapp.com/send?phone=5586999812204&text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20zoom%20educa",
                 "label": "Tenho interesse 😁"
             },
             {
                 "id": "2",
-                "type": "URL",
-                "url": "https://wa.me/5586999856371",
+                "type": "REPLY",
                 "label": "Não tenho interesse ☹️"
             },
         ]
