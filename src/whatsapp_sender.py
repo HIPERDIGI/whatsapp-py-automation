@@ -1,17 +1,27 @@
 import requests
 import os
 from dotenv import load_dotenv
+from google_sheets import log_sent_message
 
 load_dotenv()
 
 ZAPI_BASE_URL = os.getenv('ZAPI_BASE_URL')
 CLIENT_TOKEN = os.getenv('CLIENT_TOKEN')
+SHEET_NAME = os.getenv('SHEET_NAME')
+SHEET_LOG_PAGE = os.getenv('SHEET_LOG_PAGE')
 
 HEADERS = {
     "Client-Token": CLIENT_TOKEN,
     "Content-Type": "application/json"
 }
 
+def send_text_message(phone_number: str, message: str):
+    url = f"{ZAPI_BASE_URL}/send-text"
+    payload = {
+        "phone": phone_number,
+        "message": message
+    }
+    return send_request(url, payload, phone_number)
 
 def send_message_btn(phone_number: str):
     url = f"{ZAPI_BASE_URL}/send-button-actions"
@@ -25,19 +35,19 @@ def send_message_btn(phone_number: str):
             {
                 "id": "1",
                 "type": "URL",
-                "url": "https://api.whatsapp.com/send?phone=5586999812204&text=Olá%2C+gostaria+de+saber+mais+sobre+o+zoom+educa%21",
+                # uso do % para separar as palavras da mensagem é funcional
+                "url": "https://api.whatsapp.com/send?phone=5586999812204&text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20zoom%20educa",
                 "label": "Tenho interesse 😁"
             },
             {
                 "id": "2",
-                "type": "URL",
-                "url": "https://wa.me/5586999856371",
+                "type": "REPLY",
                 "label": "Não tenho interesse ☹️"
             },
         ]
     }
 
-    send_request(url, payload, phone_number)
+    return send_request(url, payload, phone_number)
 
 
 def send_image(phone_number: str):
@@ -48,7 +58,16 @@ def send_image(phone_number: str):
         "image": "https://zoomeduca.com.br/gestor_2705.jpeg"
     }
 
-    send_request(url, payload, phone_number)
+    return send_request(url, payload, phone_number)
+
+def send_all_messages(phone_number: str):
+    success_image = send_image(phone_number)
+    success_text = send_message_btn(phone_number)
+
+    if success_image and success_text:
+        log_sent_message(phone_number, "Enviado", SHEET_NAME, SHEET_LOG_PAGE)
+    else:
+        print(f"⚠️ Nem todas as mensagens foram enviadas para {phone_number}. Nenhum log registrado.")
 
 
 def send_request(url: str, payload: dict, phone_number: str):
@@ -65,6 +84,9 @@ def send_request(url: str, payload: dict, phone_number: str):
 
     if response.status_code == 200:
         print(f"✅ Mensagem enviada para {phone_number}")
+        return True
+        
     else:
         print(
             f"❌ Erro ao enviar mensagem para {phone_number}. Status: {response.status_code}")
+        return False

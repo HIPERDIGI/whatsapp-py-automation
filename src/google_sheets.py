@@ -3,6 +3,16 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import pickle
 import os
+import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
+
+ZAPI_BASE_URL = os.getenv('ZAPI_BASE_URL')
+CLIENT_TOKEN = os.getenv('CLIENT_TOKEN')
+SHEET_NAME = os.getenv('SHEET_NAME')
+SHEET_PAGE = os.getenv('SHEET_PAGE')
+SHEET_LOG_PAGE = os.getenv('SHEET_LOG_PAGE')
 
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets',
@@ -34,7 +44,7 @@ def authenticate_google():
 
 def get_phone_numbers(sheet_name: str, sheet_page: str):
     client = authenticate_google()
-    sheet = client.open('teste').worksheet('Página1')
+    sheet = client.open(SHEET_NAME).worksheet(SHEET_PAGE)
 
     # Ler o cabeçalho (linha 1 de A até Z)
     header = sheet.range('A1:Z1')
@@ -54,3 +64,28 @@ def get_phone_numbers(sheet_name: str, sheet_page: str):
 
     # Limpar espaços e manter apenas números válidos
     return [p.strip() for p in phone_numbers if p.strip() and p.strip().isdigit()]
+
+def log_sent_message(phone_number: str, status: str, sheet_name: str, sheet_page: str):
+    client = authenticate_google()
+    sheet = client.open(sheet_name).worksheet(sheet_page)
+
+    # Obter o cabeçalho (primeira linha)
+    header_row = sheet.row_values(1)
+
+    # Mapear o índice de cada coluna
+    try:
+        phone_col = header_row.index('Telefone') + 1
+        status_col = header_row.index('Status') + 1
+        datetime_col = header_row.index('Data/Hora de Envio') + 1
+    except ValueError as e:
+        raise Exception(f"Erro: Cabeçalho não encontrado ou incorreto - {e}")
+
+    now = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+
+    # Descobrir a próxima linha vazia
+    next_row = len(sheet.col_values(1)) + 1
+
+    # Inserir os dados nas colunas certas
+    sheet.update_cell(next_row, phone_col, phone_number)
+    sheet.update_cell(next_row, status_col, status)
+    sheet.update_cell(next_row, datetime_col, now)

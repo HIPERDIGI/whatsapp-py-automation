@@ -1,6 +1,6 @@
 import time
 from google_sheets import get_phone_numbers
-from whatsapp_sender import send_message_btn, send_image
+from whatsapp_sender import send_all_messages
 import os
 from dotenv import load_dotenv
 
@@ -17,8 +17,7 @@ def main():
     print(f"Encontrados {len(phone_numbers)} números.")
 
     for phone in phone_numbers:
-        send_image(phone)
-        send_message_btn(phone)
+        send_all_messages(phone)
         time.sleep(2)  # Delay entre envios
 
 
