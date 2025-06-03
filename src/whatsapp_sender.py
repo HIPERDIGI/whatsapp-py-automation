@@ -28,9 +28,9 @@ def send_message_btn(phone_number: str):
 
     payload = {
         "phone": phone_number,
-        "message": "🤖 CAPTURA INTELIGENTE com IA\n📲 Basta uma foto da folha de resposta e pronto:\n✔️ Correção automática do gabarito\n✔️ Resultados por aluno, turma e conteúdo\n📊 Análises instantâneas para tomada de decisão\n\n🚀 Transforme a forma como sua escola avalia!\n",
-        "title": "📌 Sua escola ainda corrige provas manualmente? Com o Zoom Educa, você corrige avaliações em segundos, usando apenas o celular!\n",
-        "footer": "🔗 Saiba mais: zoomeduca.com.br/saiba-mais/captura-de-folhas",
+        "message": "📈 O gráfico na tela? É só uma amostra do poder da Zoom Educa:\n💡 Acompanhe o desempenho por série, por turma ou por aluno.\n ⚙️ Automatize a correção das provas.\n 📊 Tome decisões pedagógicas com base em dados reais. \n\n🧠 Mais que uma plataforma, um aliado estratégico na gestão escolar. Deixe o retrabalho no passado e abrace a eficiência!\n",
+        "title": "📱✨ Seu boletim de resultados em tempo real, direto na palma da mão!\n",
+        "footer": "🔗 Descubra como:\n www.zoomeduca.com.br",
         "buttonActions": [
             {
                 "id": "1",
@@ -57,7 +57,8 @@ def send_image(phone_number: str):
 
     payload = {
         "phone": phone_number,
-        "image": "https://zoomeduca.com.br/gestor_2705.jpeg"
+        "image": "https://zoomeduca.com.br/mkt_020625.jpeg"
+        # "image": "https://zoomeduca.com.br/gestor_2705.jpeg"
     }
 
     return send_request(url, payload, phone_number)

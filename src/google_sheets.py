@@ -89,3 +89,33 @@ def log_sent_message(phone_number: str, status: str, sheet_name: str, sheet_page
     sheet.update_cell(next_row, phone_col, phone_number)
     sheet.update_cell(next_row, status_col, status)
     sheet.update_cell(next_row, datetime_col, now)
+
+
+def update_interest_status(phone_number: str, reply_message: str):
+    client = authenticate_google()
+    sheet = client.open(SHEET_NAME).worksheet(SHEET_PAGE)
+
+    # Lê todos os telefones da planilha (coluna A)
+    phones = sheet.col_values(1)[1:]  # Pula o cabeçalho
+
+    # Procura o número
+    try:
+        row_index = phones.index(phone_number) + 2  # +2 por causa do cabeçalho (linha 1)
+    except ValueError:
+        print(f"❌ Telefone {phone_number} não encontrado na planilha.")
+        return
+
+    # Agora vamos buscar qual coluna está disponível para preencher
+    # Lê a primeira linha (cabeçalho) para saber quais são as colunas
+    header_row = sheet.row_values(1)
+
+    # Procuramos uma coluna chamada "Resposta" ou algo similar
+    try:
+        reply_col_index = header_row.index('Resposta') + 1  # Coluna onde queremos escrever
+    except ValueError:
+        print(f"❌ Coluna 'Resposta' não encontrada na planilha.")
+        return
+
+    # Atualiza a célula correta
+    sheet.update_cell(row_index, reply_col_index, reply_message)
+    print(f"✅ Resposta '{reply_message}' registrada para {phone_number} na linha {row_index}.")
