@@ -1,9 +1,9 @@
+import os
+import datetime
+import pickle
 import gspread
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-import pickle
-import os
-import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,9 +14,10 @@ SHEET_NAME = os.getenv('SHEET_NAME')
 SHEET_PAGE = os.getenv('SHEET_PAGE')
 SHEET_LOG_PAGE = os.getenv('SHEET_LOG_PAGE')
 
-
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets',
-          'https://www.googleapis.com/auth/drive']
+SCOPES = [
+    'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/drive'
+]
 
 
 def authenticate_google():
@@ -44,9 +45,8 @@ def authenticate_google():
 
 def get_phone_numbers(sheet_name: str, sheet_page: str):
     client = authenticate_google()
-    sheet = client.open(SHEET_NAME).worksheet(SHEET_PAGE)
+    sheet = client.open(sheet_name).worksheet(sheet_page)
 
-    # Ler o cabeçalho (linha 1 de A até Z)
     header = sheet.range('A1:Z1')
     headers = [cell.value.strip().lower()
                for cell in header if cell.value.strip() != '']
@@ -58,21 +58,18 @@ def get_phone_numbers(sheet_name: str, sheet_page: str):
         raise Exception(
             'Coluna com cabeçalho contendo "Telefone" não encontrada.')
 
-    # Buscar todos os dados da coluna
     phone_numbers = sheet.col_values(col_index)
     phone_numbers = phone_numbers[1:]  # Ignorar cabeçalho
 
-    # Limpar espaços e manter apenas números válidos
     return [p.strip() for p in phone_numbers if p.strip() and p.strip().isdigit()]
+
 
 def log_sent_message(phone_number: str, status: str, sheet_name: str, sheet_page: str):
     client = authenticate_google()
     sheet = client.open(sheet_name).worksheet(sheet_page)
 
-    # Obter o cabeçalho (primeira linha)
     header_row = sheet.row_values(1)
 
-    # Mapear o índice de cada coluna
     try:
         phone_col = header_row.index('Telefone') + 1
         status_col = header_row.index('Status') + 1
@@ -81,41 +78,63 @@ def log_sent_message(phone_number: str, status: str, sheet_name: str, sheet_page
         raise Exception(f"Erro: Cabeçalho não encontrado ou incorreto - {e}")
 
     now = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-
-    # Descobrir a próxima linha vazia
     next_row = len(sheet.col_values(1)) + 1
 
-    # Inserir os dados nas colunas certas
     sheet.update_cell(next_row, phone_col, phone_number)
     sheet.update_cell(next_row, status_col, status)
     sheet.update_cell(next_row, datetime_col, now)
 
 
-def update_interest_status(phone_number: str, reply_message: str):
+def update_user_reply(phone_number: str, reply_message: str):
     client = authenticate_google()
-    sheet = client.open(SHEET_NAME).worksheet(SHEET_PAGE)
+    sheet = client.open(SHEET_NAME).worksheet(SHEET_LOG_PAGE)
 
-    # Lê todos os telefones da planilha (coluna A)
-    phones = sheet.col_values(1)[1:]  # Pula o cabeçalho
+    data = sheet.get_all_records()
+    header = sheet.row_values(1)
 
-    # Procura o número
     try:
-        row_index = phones.index(phone_number) + 2  # +2 por causa do cabeçalho (linha 1)
-    except ValueError:
-        print(f"❌ Telefone {phone_number} não encontrado na planilha.")
+        message_col = header.index('Mensagem') + 1
+        message_time_col = header.index('Data/Hora Mensagem Recebida') + 1
+    except ValueError as e:
+        print(f"Erro: cabeçalho não encontrado - {e}")
         return
 
-    # Agora vamos buscar qual coluna está disponível para preencher
-    # Lê a primeira linha (cabeçalho) para saber quais são as colunas
-    header_row = sheet.row_values(1)
+    row_number = None
+    for idx, row in reversed(list(enumerate(data, start=2))):
+        telefone = str(row.get('Telefone', '')).strip().replace(
+            ' ', '').replace('+', '')
+        status = str(row.get('Status', '')).strip().lower()
+        telefone_clean = phone_number.strip().replace(' ', '').replace('+', '')
+        print(f"telefone clean: {telefone_clean}")
+        print(f"status: {status}")
 
-    # Procuramos uma coluna chamada "Resposta" ou algo similar
-    try:
-        reply_col_index = header_row.index('Resposta') + 1  # Coluna onde queremos escrever
-    except ValueError:
-        print(f"❌ Coluna 'Resposta' não encontrada na planilha.")
+        if telefone == telefone_clean and status == 'enviado':
+            row_number = idx
+            break
+
+    if not row_number:
+        print(f"Telefone {phone_number} com status 'Enviado' não encontrado.")
         return
+    
+    print(f"📝 Atualizando linha {row_number} | coluna 'Mensagem' (índice {message_col}) 📨 com a resposta: «{reply_message}»")
 
-    # Atualiza a célula correta
-    sheet.update_cell(row_index, reply_col_index, reply_message)
-    print(f"✅ Resposta '{reply_message}' registrada para {phone_number} na linha {row_index}.")
+
+    now = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+    sheet.update_cell(row_number, message_col, reply_message)
+    sheet.update_cell(row_number, message_time_col, now)
+
+    print(
+        f"Resposta '{reply_message}' registrada para {phone_number} na linha {row_number}.")
+
+
+def listar_telefones_e_status():
+    client = authenticate_google()
+    sheet = client.open(SHEET_NAME).worksheet(SHEET_LOG_PAGE)
+
+    data = sheet.get_all_records()
+
+    print("Lista de telefones e status na planilha:")
+    for idx, row in enumerate(data, start=2):
+        telefone = str(row.get('Telefone', '')).strip()
+        status = str(row.get('Status', '')).strip()
+        print(f"Linha {idx}: Telefone='{telefone}' | Status='{status}'")

@@ -1,0 +1,3 @@
+from google_sheets import listar_telefones_e_status
+
+listar_telefones_e_status()
